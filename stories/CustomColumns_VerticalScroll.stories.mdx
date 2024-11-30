@@ -1,0 +1,61 @@
+import { Canvas, Meta, Story } from "@storybook/addon-docs";
+
+import { Gantt, TitleColumn } from "../src";
+
+import { CustomColumns_VerticalScroll } from "./CustomColumns_VerticalScroll";
+import { useMemo } from "react";
+import { initTasks } from "./helper";
+
+<Meta
+  title="CustomColumns"
+  component={Gantt}
+/>
+
+export const Template = (props) => {
+  return <CustomColumns_VerticalScroll {...props} />;
+}
+
+# Simple with only the Title column
+
+By passing a columns collection with only the `TitleColumn`
+
+```jsx
+const tasks = useMemo(() => initTasks());
+const columns = [{
+          Cell: TitleColumn,
+          width: 210,
+          title: "Name",
+          id: "Name",
+        }];
+return <Gantt
+          columns={columns}
+          tasks={tasks} />;
+```
+
+you get the following
+
+<Canvas>
+  <Story name="Simple with Title">
+    {
+      (args) => {
+        const tasks = useMemo(() => initTasks());
+        const columns = [{
+          Cell: TitleColumn,
+          width: 210,
+          title: "Name",
+          id: "Name",
+        }];
+        return <Gantt
+          columns={columns}
+          tasks={tasks} />;
+      }
+    }
+  </Story>
+</Canvas>
+
+# Custom columns example
+
+<Story name="CustomColumns_VerticalScroll">
+  {Template.bind({})}
+</Story>
+
