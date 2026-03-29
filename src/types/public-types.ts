@@ -382,7 +382,9 @@ export interface EventOption {
    */
   isMoveChildsWithParent?: boolean;
   /**
-   * Recount parents of tasks in callback `onChangeTasks`
+   * Jika true (default), tanggal parent dihitung ulang dari **anak langsung**
+   * (min start, max end) saat anak berubah, dan hasilnya ikut dikirim lewat `onChangeTasks`.
+   * Untuk **pratinjau live** saat drag: parent harus `isDisabled: true` (lihat `useGetTaskCurrentState`).
    */
   isUpdateDisabledParentsOnChange?: boolean;
   /**

@@ -23,6 +23,7 @@ import {
   Task,
   TaskOrEmpty,
   ViewMode,
+  syncParentDateRangeFromChildren,
 } from "@wamra/gantt-task-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 
@@ -55,6 +56,11 @@ function buildSampleTasks(): Task[] {
       progress: 25,
       type: "project",
       hideChildren: false,
+      /**
+       * Parent tidak di-resize manual: jadwal parent mengikuti anak (real-time saat drag + commit).
+       * Hilangkan jika proyek harus bisa digeser sendiri.
+       */
+      isDisabled: true,
     },
     {
       start: new Date(y, m, 1),
@@ -143,7 +149,9 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
   const [showTaskList, setShowTaskList] = useState(true);
   /** State terkontrol: geser/resize batang tugas & progress akan tersimpan */
-  const [tasks, setTasks] = useState<TaskOrEmpty[]>(() => buildSampleTasks());
+  const [tasks, setTasks] = useState<TaskOrEmpty[]>(() =>
+    syncParentDateRangeFromChildren(buildSampleTasks())
+  );
   /**
    * Jika true: Sabtu & Minggu tidak dianggap libur (boleh jadwal tugas),
    * dan tanggal tidak disnap ke hari kerja saat drag/resize.
@@ -175,6 +183,10 @@ export default function App() {
 
   const onChangeTasks = useCallback<OnChangeTasks>((nextTasks) => {
     setTasks([...nextTasks]);
+  }, []);
+
+  const handleSyncParentDates = useCallback(() => {
+    setTasks((prev) => syncParentDateRangeFromChildren(prev));
   }, []);
 
   const onAddTask = useCallback((parentTask: Task): Promise<TaskOrEmpty | null> => {
@@ -379,12 +391,20 @@ export default function App() {
 
         <p style={{ margin: 0, fontSize: "0.875rem", color: "#555" }}>
           Geser batang untuk pindah jadwal; tarik ujung kiri/kanan untuk ubah
-          mulai/selesai; tarik handle progress untuk ubah persentase.           Tombol ✎ membuka edit nama lengkap, nama pendek, URL avatar, tanggal,
-          dan progress. Properti <code>shortName</code> dan <code>avatarUrl</code>{" "}
-          pada task mengatur label ringkas dan foto.
-          Dengan opsi hierarki aktif, gunakan tombol + pada baris untuk menambah
-          anak.
+          mulai/selesai; tarik handle progress untuk ubah persentase. Tombol ✎
+          membuka edit nama lengkap, nama pendek, URL avatar, tanggal, dan
+          progress. Properti <code>shortName</code> dan <code>avatarUrl</code>{" "}
+          pada task mengatur label ringkas dan foto. Parent dengan{" "}
+          <code>isDisabled: true</code> mengikuti rentang anak langsung; aktifkan{" "}
+          <code>isUpdateDisabledParentsOnChange</code> (default). Dengan opsi
+          hierarki aktif, gunakan tombol + pada baris untuk menambah anak.
         </p>
+
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+          <Button size="small" variant="outlined" onClick={handleSyncParentDates}>
+            Sinkronkan ulang parent dari anak (impor / luar chart)
+          </Button>
+        </Box>
 
         <div style={{ flex: 1, minHeight: 0 }}>
           <Gantt
@@ -392,6 +412,7 @@ export default function App() {
             viewMode={viewMode}
             columns={showTaskList ? undefined : []}
             onChangeTasks={onChangeTasks}
+            isUpdateDisabledParentsOnChange
             isAdjustToWorkingDates={!allowWeekendTasks}
             {...(allowWeekendTasks
               ? {
