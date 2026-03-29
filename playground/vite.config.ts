@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@wamra/gantt-task-react": path.resolve(__dirname, "../src/index.tsx"),
+      "@odik91/gantt-task-react": path.resolve(__dirname, "../src/index.tsx"),
     },
   },
   server: {

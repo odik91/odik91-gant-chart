@@ -37,14 +37,14 @@ and feature expansions.
 Install the package using npm:
 
 ```bash
-npm install @wamra/gantt-task-react
+npm install @odik91/gantt-task-react
 ```
 
 ## How to use it
 
 ```javascript
-import { Gantt, Task, EventOption, StylingOption, ViewMode, DisplayOption } from '@wamra/gantt-task-react';
-import "@wamra/gantt-task-react/dist/style.css";
+import { Gantt, Task, EventOption, StylingOption, ViewMode, DisplayOption } from '@odik91/gantt-task-react';
+import "@odik91/gantt-task-react/dist/style.css";
 
 let tasks: Task[] = [
   {
@@ -81,7 +81,7 @@ You may handle actions
 `name` is always the main title. If `shortName` is set, the UI shows **`{name} · {shortName}`** (task/project title · PIC). `avatarUrl` is an optional image URL shown in the task list and on the bar when the bar is wide enough.
 
 ```typescript
-import { Gantt, Task, formatTaskTitleWithPic } from "@wamra/gantt-task-react";
+import { Gantt, Task, formatTaskTitleWithPic } from "@odik91/gantt-task-react";
 
 const task: Task = {
   id: "1",
@@ -105,7 +105,7 @@ formatTaskTitleWithPic(task.name, task.shortName); // "Design review — sprint 
 - **`syncParentDateRangeFromChildren(tasks)`**: Call after loading tasks from an API or when children were edited outside the chart so parents match the children’s span (handles cycles safely).
 
 ```typescript
-import { syncParentDateRangeFromChildren } from "@wamra/gantt-task-react";
+import { syncParentDateRangeFromChildren } from "@odik91/gantt-task-react";
 
 const tasks = syncParentDateRangeFromChildren(rawTasks);
 ```

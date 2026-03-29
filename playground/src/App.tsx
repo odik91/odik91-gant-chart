@@ -24,7 +24,7 @@ import {
   TaskOrEmpty,
   ViewMode,
   syncParentDateRangeFromChildren,
-} from "@wamra/gantt-task-react";
+} from "@odik91/gantt-task-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 const theme = createTheme();
@@ -274,7 +274,7 @@ export default function App() {
         }}
       >
         <h1 style={{ margin: 0, fontSize: "1.25rem" }}>
-          @wamra/gantt-task-react — playground (React 18, sumber dari{" "}
+          @odik91/gantt-task-react — playground (React 18, sumber dari{" "}
           <code>src/</code>)
         </h1>
 

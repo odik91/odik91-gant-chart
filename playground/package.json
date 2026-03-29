@@ -12,7 +12,7 @@
     "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "^6.1.9",
     "@mui/material": "^6.1.9",
-    "@wamra/gantt-task-react": "*",
+    "@odik91/gantt-task-react": "file:..",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
