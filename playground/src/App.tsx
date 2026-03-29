@@ -11,8 +11,14 @@ import {
   ThemeProvider,
   createTheme,
 } from "@mui/material";
-import { Gantt, Task, ViewMode } from "@wamra/gantt-task-react";
-import { useMemo, useState } from "react";
+import {
+  Gantt,
+  OnChangeTasks,
+  Task,
+  TaskOrEmpty,
+  ViewMode,
+} from "@wamra/gantt-task-react";
+import { useCallback, useState } from "react";
 
 const theme = createTheme();
 
@@ -66,7 +72,17 @@ function buildSampleTasks(): Task[] {
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
   const [showTaskList, setShowTaskList] = useState(true);
-  const tasks = useMemo(() => buildSampleTasks(), []);
+  /** State terkontrol: geser/resize batang tugas & progress akan tersimpan */
+  const [tasks, setTasks] = useState<TaskOrEmpty[]>(() => buildSampleTasks());
+  /**
+   * Jika true: Sabtu & Minggu tidak dianggap libur (boleh jadwal tugas),
+   * dan tanggal tidak disnap ke hari kerja saat drag/resize.
+   */
+  const [allowWeekendTasks, setAllowWeekendTasks] = useState(false);
+
+  const onChangeTasks = useCallback<OnChangeTasks>((nextTasks) => {
+    setTasks([...nextTasks]);
+  }, []);
 
   const onViewModeChange = (event: SelectChangeEvent<ViewMode>) => {
     setViewMode(event.target.value as ViewMode);
@@ -124,13 +140,36 @@ export default function App() {
             }
             label="Tampilkan daftar tugas (kiri)"
           />
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={allowWeekendTasks}
+                onChange={(_, checked) => setAllowWeekendTasks(checked)}
+                size="small"
+              />
+            }
+            label="Sabtu & Minggu boleh dipakai (bukan hari libur)"
+          />
         </Box>
+
+        <p style={{ margin: 0, fontSize: "0.875rem", color: "#555" }}>
+          Geser batang untuk pindah jadwal; tarik ujung kiri/kanan untuk ubah
+          mulai/selesai; tarik handle progress untuk ubah persentase.
+        </p>
 
         <div style={{ flex: 1, minHeight: 0 }}>
           <Gantt
             tasks={tasks}
             viewMode={viewMode}
             columns={showTaskList ? undefined : []}
+            onChangeTasks={onChangeTasks}
+            isAdjustToWorkingDates={!allowWeekendTasks}
+            {...(allowWeekendTasks
+              ? {
+                  checkIsHoliday: () => false,
+                }
+              : {})}
           />
         </div>
       </div>
