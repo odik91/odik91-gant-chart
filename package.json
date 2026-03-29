@@ -3,7 +3,7 @@
   "version": "0.6.18",
   "description": "Interactive Gantt Chart for React with TypeScript",
   "author": "odik91 <odik91@users.noreply.github.com>",
-  "homepage": "https://github.com/odik91/gantt-task-react/blob/main/README.md#gantt-task-react",
+  "homepage": "https://github.com/odik91/odik91-gant-chart/blob/main/README.md#gantt-task-react",
   "license": "MIT",
   "contributors": [
     {
@@ -17,7 +17,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/odik91/gantt-task-react.git"
+    "url": "git+https://github.com/odik91/odik91-gant-chart.git"
   },
   "workspaces": [
     "playground"
