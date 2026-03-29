@@ -29,16 +29,25 @@ export function syncParentDateRangeFromChildren(
     return list[i];
   };
 
+  /** Kedalaman dari id ke root (jumlah langkah parent). Siklus / self-parent → tidak mengulang. */
   const depthOf = (id: string): number => {
-    const t = getTask(id);
-    if (!t || t.type === "empty") {
-      return 0;
-    }
-    const p = (t as Task).parent;
-    if (!p) {
-      return 0;
-    }
-    return 1 + depthOf(p);
+    const visited = new Set<string>();
+    const walk = (currentId: string): number => {
+      if (visited.has(currentId)) {
+        return 0;
+      }
+      const t = getTask(currentId);
+      if (!t || t.type === "empty") {
+        return 0;
+      }
+      const p = (t as Task).parent;
+      if (!p) {
+        return 0;
+      }
+      visited.add(currentId);
+      return 1 + walk(p);
+    };
+    return walk(id);
   };
 
   const parentIds = new Set<string>();
