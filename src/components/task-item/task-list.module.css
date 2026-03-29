@@ -10,6 +10,10 @@
   pointer-events: none;
 }
 
+.barLabelAnchorStart {
+  text-anchor: start;
+}
+
 .barLabelOutside {
   text-anchor: start;
   -webkit-touch-callout: none;

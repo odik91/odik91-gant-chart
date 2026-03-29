@@ -169,6 +169,14 @@ export interface Task {
    */
   progress: number;
   assignees?: string[];
+  /**
+   * URL gambar avatar (ditampilkan di daftar tugas; opsional di batang jika lebar cukup)
+   */
+  avatarUrl?: string;
+  /**
+   * Label pendek (inisial / nama singkat). Jika diisi, dipakai di batang dan kolom nama menggantikan `name` untuk tampilan ringkas; `name` tetap dipakai sebagai judul penuh (tooltip).
+   */
+  shortName?: string;
   styles?: Partial<ColorStyles>;
   isDisabled?: boolean;
   isRelationDisabled?: boolean;

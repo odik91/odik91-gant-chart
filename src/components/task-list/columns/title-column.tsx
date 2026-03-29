@@ -1,6 +1,11 @@
 import React, { useCallback } from "react";
 
-import { ColumnProps, Icons, TaskOrEmpty } from "../../../types/public-types";
+import {
+  ColumnProps,
+  Icons,
+  Task,
+  TaskOrEmpty,
+} from "../../../types/public-types";
 
 import styles from "./title-column.module.css";
 
@@ -38,9 +43,12 @@ export const TitleColumn: React.FC<ColumnProps> = (props) => {
   } = props;
   const { name } = task;
 
-  const expanderSymbol = getExpanderSymbol(task, hasChildren, isClosed, icons);
+  const taskRow = task.type !== "empty" ? (task as Task) : null;
+  const avatarUrl = taskRow?.avatarUrl;
+  const shortName = taskRow?.shortName;
+  const displayLabel = shortName?.trim() ? shortName : name;
 
-  const title = isShowTaskNumbers ? `${indexStr} ${name}` : name;
+  const expanderSymbol = getExpanderSymbol(task, hasChildren, isClosed, icons);
 
   const onClick = useCallback(() => {
     if (task.type !== "empty") {
@@ -55,7 +63,7 @@ export const TitleColumn: React.FC<ColumnProps> = (props) => {
       style={{
         paddingLeft: depth * nestedTaskNameOffset,
       }}
-      title={title}
+      title={name}
     >
       <div
         className={`${styles.taskListExpander} ${
@@ -68,12 +76,23 @@ export const TitleColumn: React.FC<ColumnProps> = (props) => {
       >
         {expanderSymbol}
       </div>
-      <div style={{
-        color: colors.barLabelColor
-      }} className={styles.taskName}>
+      <div
+        style={{
+          color: colors.barLabelColor,
+        }}
+        className={`${styles.taskName} ${styles.taskNameWithAvatar}`}
+      >
         {isShowTaskNumbers && <b>{indexStr} </b>}
-
-        {name}
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            className={styles.taskAvatar}
+            width={22}
+            height={22}
+          />
+        ) : null}
+        <span className={styles.taskNameText}>{displayLabel}</span>
       </div>
     </div>
   );

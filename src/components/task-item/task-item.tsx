@@ -324,11 +324,17 @@ const TaskItemInner: React.FC<TaskItemProps> = props => {
     width,
   ]);
 
+  const barLabelText = task.shortName?.trim() ? task.shortName : task.name;
+  const barAvatarSize = Math.min(taskHeight - 4, 22);
+  const showBarAvatar = Boolean(
+    task.avatarUrl && width > barAvatarSize + 36
+  );
+
   useEffect(() => {
     if (textRef.current) {
       setIsTextInside(textRef.current.getBBox().width < width);
     }
-  }, [textRef, width]);
+  }, [textRef, width, barLabelText]);
 
   const x = useMemo(() => {
     if (isTextInside) {
@@ -383,18 +389,34 @@ const TaskItemInner: React.FC<TaskItemProps> = props => {
       ref={taskRootRef}
     >
       {taskItem}
+      {showBarAvatar && task.avatarUrl && (
+        <image
+          href={task.avatarUrl}
+          x={x1 + 3}
+          y={taskYOffset + (taskHeight - barAvatarSize) / 2}
+          width={barAvatarSize}
+          height={barAvatarSize}
+          preserveAspectRatio="xMidYMid slice"
+        />
+      )}
       <text
         fill={barLabelFill}
-        x={x}
+        x={
+          showBarAvatar && isTextInside
+            ? x1 + barAvatarSize + 6
+            : x
+        }
         y={taskYOffset + taskHeight * 0.5}
         className={
           isTextInside
-            ? style.barLabel
+            ? showBarAvatar
+              ? `${style.barLabel} ${style.barLabelAnchorStart}`
+              : style.barLabel
             : style.barLabel && style.barLabelOutside
         }
         ref={textRef}
       >
-        {task.name}
+        {barLabelText}
       </text>
 
       {(outOfParentWarnings || hasDependencyWarning) && (

@@ -57,7 +57,9 @@ function buildSampleTasks(): Task[] {
     {
       start: new Date(y, m, 1),
       end: new Date(y, m, 3, 12, 0),
-      name: "Tugas A",
+      name: "Tugas A — review desain",
+      shortName: "Tg. A",
+      avatarUrl: "https://i.pravatar.cc/64?img=12",
       id: "TaskA",
       progress: 45,
       type: "task",
@@ -66,7 +68,9 @@ function buildSampleTasks(): Task[] {
     {
       start: new Date(y, m, 4),
       end: new Date(y, m, 7),
-      name: "Tugas B",
+      name: "Tugas B — implementasi API",
+      shortName: "Budi",
+      avatarUrl: "https://i.pravatar.cc/64?img=33",
       id: "TaskB",
       progress: 10,
       type: "task",
@@ -373,8 +377,9 @@ export default function App() {
 
         <p style={{ margin: 0, fontSize: "0.875rem", color: "#555" }}>
           Geser batang untuk pindah jadwal; tarik ujung kiri/kanan untuk ubah
-          mulai/selesai; tarik handle progress untuk ubah persentase. Tombol ✎
-          pada baris di tabel membuka dialog edit nama, tanggal, dan progress.
+          mulai/selesai; tarik handle progress untuk ubah persentase.           Tombol ✎ membuka edit nama lengkap, nama pendek, URL avatar, tanggal,
+          dan progress. Properti <code>shortName</code> dan <code>avatarUrl</code>{" "}
+          pada task mengatur label ringkas dan foto.
           Dengan opsi hierarki aktif, gunakan tombol + pada baris untuk menambah
           anak.
         </p>
@@ -402,7 +407,7 @@ export default function App() {
             {editDraft && (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
                 <TextField
-                  label="Nama"
+                  label="Nama lengkap"
                   value={editDraft.name}
                   onChange={(e) =>
                     setEditDraft((d) => (d ? { ...d, name: e.target.value } : d))
@@ -412,6 +417,42 @@ export default function App() {
                 />
                 {isTaskWithDates(editDraft) && (
                   <>
+                    <TextField
+                      label="Nama pendek (batang & daftar)"
+                      value={editDraft.shortName ?? ""}
+                      onChange={(e) =>
+                        setEditDraft((d) => {
+                          if (!d || !isTaskWithDates(d)) {
+                            return d;
+                          }
+                          const v = e.target.value;
+                          return {
+                            ...d,
+                            shortName: v.trim() ? v : undefined,
+                          };
+                        })
+                      }
+                      helperText="Kosongkan untuk memakai nama lengkap di mana-mana"
+                      fullWidth
+                    />
+                    <TextField
+                      label="URL foto avatar"
+                      value={editDraft.avatarUrl ?? ""}
+                      onChange={(e) =>
+                        setEditDraft((d) => {
+                          if (!d || !isTaskWithDates(d)) {
+                            return d;
+                          }
+                          const v = e.target.value;
+                          return {
+                            ...d,
+                            avatarUrl: v.trim() ? v : undefined,
+                          };
+                        })
+                      }
+                      helperText="Gambar persegi; ditampilkan di daftar & di batang jika cukup lebar"
+                      fullWidth
+                    />
                     <TextField
                       label="Mulai"
                       type="datetime-local"
