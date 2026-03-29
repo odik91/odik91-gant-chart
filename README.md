@@ -74,12 +74,56 @@ You may handle actions
 />
 ```
 
-## How to run example
+## Pengembangan lokal (React 18+)
 
-```
-cd ./example
+Persyaratan: Node.js 18 atau lebih baru.
+
+Dari root repositori, pasang dependensi (termasuk workspace `playground`):
+
+```bash
 npm install
-npm start
+```
+
+### Build library
+
+```bash
+npm run build
+```
+
+Keluaran ada di folder `dist/` (`gantt-task-react.es.js`, `gantt-task-react.umd.js`, `style.css`, deklarasi TypeScript).
+
+### Unit test (Vitest)
+
+```bash
+npm run test:unit
+```
+
+Mode watch:
+
+```bash
+npm run test:watch
+```
+
+Lint + unit test + build (CI lokal):
+
+```bash
+npm test
+```
+
+### Playground (Vite + React 18)
+
+Aplikasi demo mengimpor sumber langsung dari `src/` sehingga perubahan pada library langsung terlihat tanpa `npm run build` berulang.
+
+```bash
+npm run playground
+```
+
+Buka `http://localhost:5174` (atau URL yang ditampilkan di terminal).
+
+### Storybook (dokumentasi interaktif)
+
+```bash
+npm run storybook
 ```
 
 ## Gantt Configuration

@@ -40,6 +40,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "example"
+    "example",
+    "src/test",
+    "playground"
   ]
 }

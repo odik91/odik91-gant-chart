@@ -19,6 +19,12 @@
     "type": "git",
     "url": "git+https://github.com/wamra/gantt-task-react.git"
   },
+  "workspaces": [
+    "playground"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -45,8 +51,9 @@
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
     "test:lint": "eslint --ext .tsx src/**/*",
-    "test:unit": "cross-env CI=1 react-scripts test --env=jsdom",
-    "test:watch": "react-scripts test --env=jsdom",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "playground": "npm run dev -w gantt-task-react-playground",
     "predeploy": "yarn storybook build",
     "deploy-storybook": "gh-pages -d storybook-static",
     "build-storybook": "storybook build"
@@ -62,8 +69,8 @@
   "peerDependencies": {
     "@mui/icons-material": "^6.1.0",
     "@mui/material": "^6.1.0",
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-regenerator": "~7.20.5",
@@ -108,7 +115,6 @@
     "prettier": "~2.8.8",
     "react": "~18.3.1",
     "react-dom": "~18.3.1",
-    "react-scripts": "^5.0.1",
     "rollup-plugin-peer-deps-external": "2.2.4",
     "storybook": "7.6.20",
     "typescript": "~5.1.6",
@@ -117,13 +123,5 @@
   },
   "files": [
     "dist"
-  ],
-  "jest": {
-    "transformIgnorePatterns": [
-      "/node_modules/(?!react-dnd|core-dnd|@react-dnd|dnd-core|react-dnd-html5-backend)"
-    ],
-    "moduleNameMapper": {
-      "/~.+\\.module\\.(css|sass|scss)$/": "identity-obj-proxy"
-    }
-  }
+  ]
 }
