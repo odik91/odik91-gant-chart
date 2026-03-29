@@ -22,6 +22,8 @@ creating a comprehensive solution for managing Gantt charts.
 - **Localization Support**: Offers localization for various languages and date formats.
 - **Event Handling**: Supports comprehensive event handling for interactive features.
 - **QuarterYear View Mode**: Supports viewing tasks in quarterly segments, providing a flexible timeline view.
+- **PIC label & avatar**: Optional `shortName` (assignee) and `avatarUrl` show as `name · PIC` in the task list and on bars (with photo when space allows).
+- **Parent span from children**: `isUpdateDisabledParentsOnChange` (default `true`) recalculates parent `start`/`end` from direct children when dates change; use `isDisabled: true` on a parent for live bar updates while dragging. Helper `syncParentDateRangeFromChildren` syncs imported or external data.
 
 ### Enhancement Summary
 
@@ -73,6 +75,47 @@ You may handle actions
   onClick={onClick}
 />
 ```
+
+### Task label: title and PIC (`shortName`, `avatarUrl`)
+
+`name` is always the main title. If `shortName` is set, the UI shows **`{name} · {shortName}`** (task/project title · PIC). `avatarUrl` is an optional image URL shown in the task list and on the bar when the bar is wide enough.
+
+```typescript
+import { Gantt, Task, formatTaskTitleWithPic } from "@wamra/gantt-task-react";
+
+const task: Task = {
+  id: "1",
+  type: "task",
+  name: "Design review — sprint 2",
+  shortName: "Ana",
+  avatarUrl: "https://example.com/avatars/ana.jpg",
+  start: new Date(),
+  end: new Date(),
+  progress: 50,
+};
+
+// Same string as used on bars / list (for custom columns or tests):
+formatTaskTitleWithPic(task.name, task.shortName); // "Design review — sprint 2 · Ana"
+```
+
+### Parent dates following children
+
+- **`isUpdateDisabledParentsOnChange`** (default `true`): When a child’s dates change, each ancestor’s `start`/`end` is recomputed as the min/max of **direct** children’s dates, and included in `onChangeTasks` updates.
+- **`isDisabled: true`** on a parent: The parent bar is not dragged manually; while a child is dragged, the parent’s displayed range can follow in real time (see `useGetTaskCurrentState` in the library).
+- **`syncParentDateRangeFromChildren(tasks)`**: Call after loading tasks from an API or when children were edited outside the chart so parents match the children’s span (handles cycles safely).
+
+```typescript
+import { syncParentDateRangeFromChildren } from "@wamra/gantt-task-react";
+
+const tasks = syncParentDateRangeFromChildren(rawTasks);
+```
+
+### Exported helpers
+
+| Export                         | Purpose |
+| ------------------------------ | ------- |
+| `formatTaskTitleWithPic`       | Builds `name · shortName` when `shortName` is set. |
+| `syncParentDateRangeFromChildren` | `(tasks: TaskOrEmpty[]) => TaskOrEmpty[]` — sets each parent’s `start`/`end` from direct children (deepest parents first). |
 
 ## Pengembangan lokal (React 18+)
 
@@ -170,8 +213,11 @@ npm run storybook
 | onExpanderClick\*  | onExpanderClick: (task: Task) => void;                                        | Function to execute on the table expander click.                                        |
 | onWheel\*          | onWheel: (wheelEvent: WheelEvent) => void;                                    | Function to execute when the mouse wheel is used.                                       |
 | timeStep           | number                                                                        | Time step value for onDateChange. Specify in milliseconds.                              |
+| onChangeTasks      | `(nextTasks, action) => void`                                                 | Called when the task list changes (drag, edit, hierarchy, etc.). `action` is `OnChangeTasksAction` (e.g. `date_change`, `add_tasks`). |
+| isUpdateDisabledParentsOnChange | boolean | Default `true`. Recalculates parent `start`/`end` from direct children when a child changes. |
+| isMoveChildsWithParent | boolean | Default `true`. When moving a group task, moves descendants together.              |
 
-> > Chart undoes operation if method returns false or error. Parameter children returns one-level deep records.
+> Chart undoes operation if method returns false or error. Parameter children returns one-level deep records.
 
 ### DisplayOption
 
@@ -217,24 +263,21 @@ npm run storybook
 | Parameter Name | Type     | Description                                                                                           |
 | :------------- | :------- | :---------------------------------------------------------------------------------------------------- |
 | id\*           | string   | Task id.                                                                                              |
-| name\*         | string   | Task display name.                                                                                    |
-| type\*         | string   | Task display type: **task**, **milestone**, **project**                                               |
+| name\*         | string   | Full task or project title (always shown; used in tooltips).                                           |
+| type\*         | string   | **task**, **milestone**, or **project**.                                                              |
 | start\*        | Date     | Task start date.                                                                                      |
 | end\*          | Date     | Task end date.                                                                                        |
-| progress\*     | number   | Task progress. Sets in percent from 0 to 100.                                                         |
-| assignees\*    | string[] | List of people assigned to the task                                                                   |
-| dependencies   | string[] | Specifies the parent dependencies ids.                                                                |
-| styles         | object   | Specifies the taskbar styling settings locally. Object is passed with the following attributes:       |
-|                |          | - **backgroundColor**: String. Specifies the taskbar background fill color locally.                   |
-|                |          | - **backgroundSelectedColor**: String. Specifies the taskbar background fill color locally on select. |
-|                |          | - **progressColor**: String. Specifies the taskbar progress fill color locally.                       |
-|                |          | - **progressSelectedColor**: String. Specifies the taskbar progress fill color globally on select.    |
-| isDisabled     | bool     | Disables all action for current task.                                                                 |
-| fontSize       | string   | Specifies the taskbar font size locally.                                                              |
-| project        | string   | Task project name                                                                                     |
-| hideChildren   | bool     | Hide children items. Parameter works with project type only                                           |
+| progress\*     | number   | Progress from 0 to 100.                                                                               |
+| shortName      | string   | Optional short PIC/assignee label. Shown as `name · shortName` in the list and on bars.                 |
+| avatarUrl      | string   | Optional image URL for PIC avatar (task list; on bar if wide enough).                                  |
+| assignees      | string[] | Optional list of assignee names (not rendered automatically; use `shortName` / `avatarUrl` for UI).   |
+| parent         | string   | Optional id of the parent task (hierarchy).                                                         |
+| dependencies   | Dependency[] | Optional task dependencies (see type definitions).                                                |
+| styles         | object   | Local task bar styling (see `ColorStyles` / partial overrides).                                       |
+| isDisabled     | boolean  | If `true`, drag/resize/delete are disabled for this task; for parents, enables live span updates from children when `isUpdateDisabledParentsOnChange` is true. |
+| hideChildren   | boolean  | For **project** type: collapse child rows in the list.                                                |
 
-> > *Required
+\* Required fields for a non-empty task.
 
 ## License
 
