@@ -2,6 +2,10 @@ import {
   Box,
   Button,
   CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -9,6 +13,7 @@ import {
   Select,
   type SelectChangeEvent,
   Switch,
+  TextField,
   ThemeProvider,
   createTheme,
 } from "@mui/material";
@@ -19,7 +24,7 @@ import {
   TaskOrEmpty,
   ViewMode,
 } from "@wamra/gantt-task-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 const theme = createTheme();
 
@@ -108,6 +113,26 @@ function createRootProject(tasksLength: number): Task {
   };
 }
 
+function isTaskWithDates(t: TaskOrEmpty): t is Task {
+  return t.type !== "empty";
+}
+
+function cloneTaskForEdit(t: TaskOrEmpty): TaskOrEmpty {
+  if (t.type === "empty") {
+    return { ...t };
+  }
+  return {
+    ...t,
+    start: new Date(t.start),
+    end: new Date(t.end),
+  };
+}
+
+function formatDateTimeLocal(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
   const [showTaskList, setShowTaskList] = useState(true);
@@ -122,6 +147,12 @@ export default function App() {
   const [enableHierarchyAdd, setEnableHierarchyAdd] = useState(true);
   /** Parent untuk tombol "Tambah sub-tugas" (hierarki task / project) */
   const [selectedParentId, setSelectedParentId] = useState<string>("");
+
+  const editResolverRef = useRef<((value: TaskOrEmpty | null) => void) | null>(
+    null
+  );
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDraft, setEditDraft] = useState<TaskOrEmpty | null>(null);
 
   const parentCandidates = useMemo(
     () =>
@@ -143,6 +174,47 @@ export default function App() {
   const onAddTask = useCallback((parentTask: Task): Promise<TaskOrEmpty | null> => {
     return Promise.resolve(createChildTask(parentTask));
   }, []);
+
+  const onEditTask = useCallback(
+    (task: TaskOrEmpty): Promise<TaskOrEmpty | null> => {
+      return new Promise((resolve) => {
+        setEditDraft(cloneTaskForEdit(task));
+        editResolverRef.current = resolve;
+        setEditOpen(true);
+      });
+    },
+    []
+  );
+
+  const handleEditDialogClose = useCallback((saved: TaskOrEmpty | null) => {
+    setEditOpen(false);
+    setEditDraft(null);
+    const r = editResolverRef.current;
+    editResolverRef.current = null;
+    if (r) {
+      r(saved);
+    }
+  }, []);
+
+  const handleEditSave = useCallback(() => {
+    if (!editDraft) {
+      handleEditDialogClose(null);
+      return;
+    }
+    if (isTaskWithDates(editDraft)) {
+      let next: Task = { ...editDraft };
+      if (next.end < next.start) {
+        next = {
+          ...next,
+          end: new Date(next.start.getTime() + 60 * 60 * 1000),
+        };
+      }
+      next.progress = Math.min(100, Math.max(0, next.progress));
+      handleEditDialogClose(next);
+      return;
+    }
+    handleEditDialogClose(editDraft);
+  }, [editDraft, handleEditDialogClose]);
 
   const handleAddChildFromToolbar = useCallback(() => {
     if (!selectedParent) {
@@ -301,9 +373,10 @@ export default function App() {
 
         <p style={{ margin: 0, fontSize: "0.875rem", color: "#555" }}>
           Geser batang untuk pindah jadwal; tarik ujung kiri/kanan untuk ubah
-          mulai/selesai; tarik handle progress untuk ubah persentase. Dengan
-          opsi hierarki aktif, gunakan tombol + pada baris di tabel (kolom
-          terakhir) untuk menambah anak pada baris tersebut.
+          mulai/selesai; tarik handle progress untuk ubah persentase. Tombol ✎
+          pada baris di tabel membuka dialog edit nama, tanggal, dan progress.
+          Dengan opsi hierarki aktif, gunakan tombol + pada baris untuk menambah
+          anak.
         </p>
 
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -319,8 +392,96 @@ export default function App() {
                 }
               : {})}
             {...(enableHierarchyAdd ? { onAddTask } : {})}
+            onEditTask={onEditTask}
           />
         </div>
+
+        <Dialog open={editOpen} onClose={() => handleEditDialogClose(null)} fullWidth maxWidth="sm">
+          <DialogTitle>Edit tugas</DialogTitle>
+          <DialogContent>
+            {editDraft && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+                <TextField
+                  label="Nama"
+                  value={editDraft.name}
+                  onChange={(e) =>
+                    setEditDraft((d) => (d ? { ...d, name: e.target.value } : d))
+                  }
+                  fullWidth
+                  autoFocus
+                />
+                {isTaskWithDates(editDraft) && (
+                  <>
+                    <TextField
+                      label="Mulai"
+                      type="datetime-local"
+                      value={formatDateTimeLocal(editDraft.start)}
+                      onChange={(e) =>
+                        setEditDraft((d) =>
+                          d && isTaskWithDates(d)
+                            ? {
+                                ...d,
+                                start: new Date(e.target.value),
+                              }
+                            : d
+                        )
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Selesai"
+                      type="datetime-local"
+                      value={formatDateTimeLocal(editDraft.end)}
+                      onChange={(e) =>
+                        setEditDraft((d) =>
+                          d && isTaskWithDates(d)
+                            ? {
+                                ...d,
+                                end: new Date(e.target.value),
+                              }
+                            : d
+                        )
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Progress (%)"
+                      type="number"
+                      inputProps={{ min: 0, max: 100, step: 1 }}
+                      value={editDraft.progress}
+                      onChange={(e) => {
+                        const v = Math.min(
+                          100,
+                          Math.max(0, Number(e.target.value) || 0)
+                        );
+                        setEditDraft((d) =>
+                          d && isTaskWithDates(d) ? { ...d, progress: v } : d
+                        );
+                      }}
+                      fullWidth
+                    />
+                  </>
+                )}
+                {editDraft.type === "empty" && (
+                  <TextField
+                    label="Catatan"
+                    value="Tugas tanpa tanggal — hanya nama yang bisa diedit"
+                    fullWidth
+                    disabled
+                  />
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => handleEditDialogClose(null)}>Batal</Button>
+            <Button variant="contained" onClick={handleEditSave}>
+              Simpan
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </ThemeProvider>
   );
