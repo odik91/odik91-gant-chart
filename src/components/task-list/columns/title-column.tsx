@@ -7,6 +7,8 @@ import {
   TaskOrEmpty,
 } from "../../../types/public-types";
 
+import { formatTaskTitleWithPic } from "../../../helpers/format-task-title-with-pic";
+
 import styles from "./title-column.module.css";
 
 const getExpanderSymbol = (
@@ -45,8 +47,10 @@ export const TitleColumn: React.FC<ColumnProps> = (props) => {
 
   const taskRow = task.type !== "empty" ? (task as Task) : null;
   const avatarUrl = taskRow?.avatarUrl;
-  const shortName = taskRow?.shortName;
-  const displayLabel = shortName?.trim() ? shortName : name;
+  const displayLabel =
+    task.type === "empty"
+      ? name
+      : formatTaskTitleWithPic(name, taskRow?.shortName);
 
   const expanderSymbol = getExpanderSymbol(task, hasChildren, isClosed, icons);
 
@@ -63,7 +67,7 @@ export const TitleColumn: React.FC<ColumnProps> = (props) => {
       style={{
         paddingLeft: depth * nestedTaskNameOffset,
       }}
-      title={name}
+      title={displayLabel}
     >
       <div
         className={`${styles.taskListExpander} ${

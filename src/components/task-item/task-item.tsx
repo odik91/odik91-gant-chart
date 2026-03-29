@@ -27,6 +27,7 @@ import { TaskWarning } from "./task-warning";
 import style from "./task-list.module.css";
 import { BarFixWidth, fixWidthContainerClass } from "../other/bar-fix-width";
 import { BarRelationHandle } from "./bar/bar-relation-handle";
+import { formatTaskTitleWithPic } from "../../helpers/format-task-title-with-pic";
 
 export type TaskItemProps = {
   children?: React.ReactNode
@@ -324,7 +325,7 @@ const TaskItemInner: React.FC<TaskItemProps> = props => {
     width,
   ]);
 
-  const barLabelText = task.shortName?.trim() ? task.shortName : task.name;
+  const barLabelText = formatTaskTitleWithPic(task.name, task.shortName);
   const barAvatarSize = Math.min(taskHeight - 4, 22);
   const showBarAvatar = Boolean(
     task.avatarUrl && width > barAvatarSize + 36

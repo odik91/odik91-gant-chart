@@ -174,7 +174,8 @@ export interface Task {
    */
   avatarUrl?: string;
   /**
-   * Label pendek (inisial / nama singkat). Jika diisi, dipakai di batang dan kolom nama menggantikan `name` untuk tampilan ringkas; `name` tetap dipakai sebagai judul penuh (tooltip).
+   * Nama PIC / assignee pendek. Jika diisi, ditampilkan bersama `name` dengan pemisah « · »
+   * (nama proyek/tugas · PIC) di daftar dan batang; foto dari `avatarUrl`.
    */
   shortName?: string;
   styles?: Partial<ColorStyles>;

@@ -49,6 +49,8 @@ function buildSampleTasks(): Task[] {
       start: new Date(y, m, 2),
       end: new Date(y, m, 8),
       name: "Contoh proyek",
+      shortName: "Eko",
+      avatarUrl: "https://i.pravatar.cc/64?img=68",
       id: "ProjectSample",
       progress: 25,
       type: "project",
@@ -58,7 +60,7 @@ function buildSampleTasks(): Task[] {
       start: new Date(y, m, 1),
       end: new Date(y, m, 3, 12, 0),
       name: "Tugas A — review desain",
-      shortName: "Tg. A",
+      shortName: "Ana",
       avatarUrl: "https://i.pravatar.cc/64?img=12",
       id: "TaskA",
       progress: 45,
@@ -69,7 +71,7 @@ function buildSampleTasks(): Task[] {
       start: new Date(y, m, 4),
       end: new Date(y, m, 7),
       name: "Tugas B — implementasi API",
-      shortName: "Budi",
+      shortName: "Budi W.",
       avatarUrl: "https://i.pravatar.cc/64?img=33",
       id: "TaskB",
       progress: 10,
@@ -418,7 +420,7 @@ export default function App() {
                 {isTaskWithDates(editDraft) && (
                   <>
                     <TextField
-                      label="Nama pendek (batang & daftar)"
+                      label="Nama PIC (ditampilkan setelah judul, mis. «Judul · PIC»)"
                       value={editDraft.shortName ?? ""}
                       onChange={(e) =>
                         setEditDraft((d) => {
@@ -432,7 +434,7 @@ export default function App() {
                           };
                         })
                       }
-                      helperText="Kosongkan untuk memakai nama lengkap di mana-mana"
+                      helperText="Kosongkan jika tidak ada PIC; judul baris tetap dari «Nama lengkap»"
                       fullWidth
                     />
                     <TextField

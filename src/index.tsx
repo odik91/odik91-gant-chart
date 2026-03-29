@@ -15,3 +15,5 @@ export * from "./constants";
 
 export { ViewMode } from "./types/public-types";
 export * from "./types/public-types";
+
+export { formatTaskTitleWithPic } from "./helpers/format-task-title-with-pic";
