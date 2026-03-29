@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   CssBaseline,
   FormControl,
   FormControlLabel,
@@ -18,7 +19,7 @@ import {
   TaskOrEmpty,
   ViewMode,
 } from "@wamra/gantt-task-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 const theme = createTheme();
 
@@ -69,6 +70,44 @@ function buildSampleTasks(): Task[] {
   ];
 }
 
+function newId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/** Anak baru di bawah parent: jadwal di dalam rentang parent, `parent` mengikuti id parent */
+function createChildTask(parentTask: Task): Task {
+  const start = new Date(parentTask.start);
+  const end = new Date(parentTask.end);
+  const span = Math.max(end.getTime() - start.getTime(), 24 * 60 * 60 * 1000);
+  const childEnd = new Date(start.getTime() + Math.min(span, 5 * 24 * 60 * 60 * 1000));
+  if (childEnd <= start) {
+    childEnd.setTime(start.getTime() + 24 * 60 * 60 * 1000);
+  }
+  return {
+    id: newId("child"),
+    name: `Sub-tugas (${parentTask.name})`,
+    type: "task",
+    parent: parentTask.id,
+    start,
+    end: childEnd,
+    progress: 0,
+  };
+}
+
+function createRootProject(tasksLength: number): Task {
+  const y = new Date().getFullYear();
+  const m = new Date().getMonth();
+  return {
+    id: newId("project"),
+    name: `Proyek baru ${tasksLength + 1}`,
+    type: "project",
+    start: new Date(y, m, 1),
+    end: new Date(y, m, 20),
+    progress: 0,
+    hideChildren: false,
+  };
+}
+
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
   const [showTaskList, setShowTaskList] = useState(true);
@@ -79,13 +118,56 @@ export default function App() {
    * dan tanggal tidak disnap ke hari kerja saat drag/resize.
    */
   const [allowWeekendTasks, setAllowWeekendTasks] = useState(false);
+  /** Tombol + di tabel & panel bawah: tambah sub-tugas dengan parent dari hierarki */
+  const [enableHierarchyAdd, setEnableHierarchyAdd] = useState(true);
+  /** Parent untuk tombol "Tambah sub-tugas" (hierarki task / project) */
+  const [selectedParentId, setSelectedParentId] = useState<string>("");
+
+  const parentCandidates = useMemo(
+    () =>
+      tasks.filter(
+        (t): t is Task => t.type === "task" || t.type === "project"
+      ),
+    [tasks]
+  );
+
+  const selectedParent = useMemo(
+    () => parentCandidates.find((t) => t.id === selectedParentId),
+    [parentCandidates, selectedParentId]
+  );
 
   const onChangeTasks = useCallback<OnChangeTasks>((nextTasks) => {
     setTasks([...nextTasks]);
   }, []);
 
+  const onAddTask = useCallback((parentTask: Task): Promise<TaskOrEmpty | null> => {
+    return Promise.resolve(createChildTask(parentTask));
+  }, []);
+
+  const handleAddChildFromToolbar = useCallback(() => {
+    if (!selectedParent) {
+      return;
+    }
+    const child = createChildTask(selectedParent);
+    setTasks((prev) => {
+      const parentIdx = prev.findIndex((t) => t.id === selectedParent.id);
+      const next = [...prev];
+      const insertAt = parentIdx >= 0 ? parentIdx + 1 : next.length;
+      next.splice(insertAt, 0, child);
+      return next;
+    });
+  }, [selectedParent]);
+
+  const handleAddRootProject = useCallback(() => {
+    setTasks((prev) => [...prev, createRootProject(prev.length)]);
+  }, []);
+
   const onViewModeChange = (event: SelectChangeEvent<ViewMode>) => {
     setViewMode(event.target.value as ViewMode);
+  };
+
+  const onParentSelectChange = (event: SelectChangeEvent<string>) => {
+    setSelectedParentId(event.target.value);
   };
 
   return (
@@ -151,11 +233,77 @@ export default function App() {
             }
             label="Sabtu & Minggu boleh dipakai (bukan hari libur)"
           />
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={enableHierarchyAdd}
+                onChange={(_, checked) => setEnableHierarchyAdd(checked)}
+                size="small"
+              />
+            }
+            label="Tambah sub-tugas (tombol + & panel di bawah)"
+          />
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 2,
+            p: 1.5,
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 1,
+            bgcolor: "action.hover",
+          }}
+        >
+          <FormControl size="small" sx={{ minWidth: 260 }}>
+            <InputLabel id="playground-parent-label">Parent (herarki)</InputLabel>
+            <Select<string>
+              labelId="playground-parent-label"
+              label="Parent (herarki)"
+              value={selectedParentId}
+              displayEmpty
+              onChange={onParentSelectChange}
+            >
+              <MenuItem value="">
+                <em>Pilih task / proyek induk</em>
+              </MenuItem>
+              {parentCandidates.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  {t.type === "project" ? "[Proyek] " : "[Tugas] "}
+                  {t.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            size="small"
+            disabled={!selectedParent || !enableHierarchyAdd}
+            onClick={handleAddChildFromToolbar}
+          >
+            Tambah sub-tugas di bawah parent
+          </Button>
+
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={!enableHierarchyAdd}
+            onClick={handleAddRootProject}
+          >
+            Tambah proyek (root)
+          </Button>
         </Box>
 
         <p style={{ margin: 0, fontSize: "0.875rem", color: "#555" }}>
           Geser batang untuk pindah jadwal; tarik ujung kiri/kanan untuk ubah
-          mulai/selesai; tarik handle progress untuk ubah persentase.
+          mulai/selesai; tarik handle progress untuk ubah persentase. Dengan
+          opsi hierarki aktif, gunakan tombol + pada baris di tabel (kolom
+          terakhir) untuk menambah anak pada baris tersebut.
         </p>
 
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -170,6 +318,7 @@ export default function App() {
                   checkIsHoliday: () => false,
                 }
               : {})}
+            {...(enableHierarchyAdd ? { onAddTask } : {})}
           />
         </div>
       </div>
